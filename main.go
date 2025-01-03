@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/intellect-sam/my-go-project/types"
-	"golang.org/x/exp/rand"
 )
 
 var wg sync.WaitGroup
@@ -24,6 +23,11 @@ func main() {
 	// for _, v := range newStudents {
 	// 	fmt.Println(v)
 	// }
+
+	nameOfStudents := make([]string, 3)
+	nameOfStudents[0] = "Sam"
+	nameOfStudents[1] = "John"
+	nameOfStudents[2] = "Peter"
 
 	person := types.Person{
 		FirstName: "Sam",
@@ -50,24 +54,50 @@ func main() {
 	fmt.Println(sam.Person)
 
 	// This is where the gorutines are used
+	count := make(chan int)
 	wg.Add(2)
 
-	fmt.Println("Start Goroutines")
-	go PrintCount("A")
-	go PrintCount("B")
+	fmt.Println("Start Gorutines")
+	go PrintCount("A", count)
+	go PrintCount("B", count)
 
-	fmt.Println("Waiting To Finish")
+	fmt.Println("Channel begins")
+	count <- 1
+
+	fmt.Println("Waiting to finish")
 	wg.Wait()
-	fmt.Println("\nTerminating Program")
+
+	fmt.Println("\nTerminating the program")
 
 }
 
-func PrintCount(label string) {
+func PrintCount(label string, count chan int) {
 	defer wg.Done()
 
-	for count := 1; count <= 10; count++ {
-		sleep := rand.Int63n(1000)
-		time.Sleep(time.Duration(sleep) * time.Millisecond)
-		fmt.Printf("Count: %d from %s\n", count, label)
+	for {
+		val, ok := <-count
+		if !ok {
+			fmt.Println("Channel was closed")
+			return
+		}
+		fmt.Printf("Count: %d received from %s \n", val, label)
+		if val == 10 {
+			fmt.Printf("Channel Closed from %s \n", label)
+			// Close the channel
+			close(count)
+			return
+		}
+		val++
+		// Send count back to the other goroutine.
+		count <- val
 	}
+
+}
+
+func channel() {
+	count := make(chan string, 1)
+	count <- "Hello Samuel"
+
+	message := <-count
+	fmt.Println(message)
 }
