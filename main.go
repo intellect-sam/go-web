@@ -2,10 +2,14 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/intellect-sam/my-go-project/types"
+	"golang.org/x/exp/rand"
 )
+
+var wg sync.WaitGroup
 
 func main() {
 
@@ -45,4 +49,25 @@ func main() {
 	fmt.Println(sam.Roles)
 	fmt.Println(sam.Person)
 
+	// This is where the gorutines are used
+	wg.Add(2)
+
+	fmt.Println("Start Goroutines")
+	go PrintCount("A")
+	go PrintCount("B")
+
+	fmt.Println("Waiting To Finish")
+	wg.Wait()
+	fmt.Println("\nTerminating Program")
+
+}
+
+func PrintCount(label string) {
+	defer wg.Done()
+
+	for count := 1; count <= 10; count++ {
+		sleep := rand.Int63n(1000)
+		time.Sleep(time.Duration(sleep) * time.Millisecond)
+		fmt.Printf("Count: %d from %s\n", count, label)
+	}
 }
